@@ -1,0 +1,39 @@
+<div class="h-full flex flex-col">
+    <div class="flex-1 overflow-y-auto p-4">
+    <h3 class="text-2xl font-bold mb-4">Vprašanja in Odgovori</h3>
+    <div class="space-y-6">
+        {% for qa in  video.extracted_data.questions.questions %}
+        <div class="question bg-white shadow-md rounded-lg p-4">
+            <h5 class="font-semibold mb-2">{{ qa.question }}</h5>
+            <span class="show-answer" onclick="showAnswer(event)">Pokaži odgovor</span>
+            <p class="text-gray-700 hidden">{{ qa.answer }}</p>
+        </div>
+        {% empty %}
+        <p class="text-gray-500">No questions available.</p>
+        {% endfor %}
+    </div>
+</div>
+</div>
+
+<script>
+function showAnswer(event) {
+    const answer = event.target.nextElementSibling;
+    answer.classList.toggle('hidden');
+    event.target.textContent = answer.classList.contains('hidden') ? 'Pokaži odgovor' : 'Skrij odgovor';
+}
+</script>
+
+<style>
+.question .hidden {
+    display: none;
+}
+.show-answer {
+    user-select: none;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+    background: gray;
+    color: aliceblue;
+    border-radius: 10px;
+}
+</style>

@@ -1,0 +1,9 @@
+Django==5.0.4
+psycopg[binary]
+django-tailwind[reload]
+Pillow
+moviepy
+django-storages[s3]
+openai-whisper
+openai
+python-ffmpeg

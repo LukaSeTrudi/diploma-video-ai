@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mx-auto px-4 py-8 flex-1">
+    <div class="grid grid-cols-12 md:grid-cols-12 h-full">
+      <div class="col-span-12">
+        <div class="flex justify-between flex-row">
+          <div class="flex" class="bg-blue-500">
+            <input type="text" placeholder="Search" class="px-4 py-2 rounded-l-lg border-gray-300 border-2 focus:outline-none focus:border-blue-500" />
+            <button class="px-4 py-2 bg-blue-500 text-white rounded-r-lg">Search</button>
+          </div>
+          <a href="add"><button class="px-4 py-2 bg-blue-500 text-white rounded-lg">Add video</button></a>
+        </div>
+        <h2 class="text-2xl font-semibold mb-4 mt-4">Available Videos</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for video in videos %}
+            <a href="{% url 'video' video.pk %}" class="hover:opacity-75 transition duration-300 ease-in-out">
+              <div class="bg-gray-200 rounded-lg">
+                {% if video.thumbnail %}
+                <img src="{{ video.thumbnail.url }}" alt="Thumbnail" class="h-48 w-full object-cover rounded-t-lg" />
+                {% endif %}
+                <div class="p-4">
+                  <h3 class="text-lg font-semibold">{{ video.title }}</h3>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+          <div class="bg-gray-200 h-48 rounded-lg"></div>
+          <div class="bg-gray-200 h-48 rounded-lg"></div>
+          <div class="bg-gray-200 h-48 rounded-lg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

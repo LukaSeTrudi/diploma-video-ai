@@ -1,0 +1,63 @@
+{% load custom_filters %}
+<div class="h-full flex flex-col">
+    <div class="flex-1 overflow-y-auto">
+      {% for segment in video.transcription.segments %}
+      <div id="segment-{{ forloop.counter0 }}" class="border-b border-gray-200 p-4 hover:cursor-pointer" onclick="segmentClicked({{ forloop.counter0 }})">
+          <p class="text-gray-600 text-sm">
+              <span class="font-semibold text-gray-800">{{ segment.start|time_format }}s</span> - 
+              <span class="font-semibold text-gray-800">{{ segment.end|time_format }}s</span>
+          </p>
+          <p class="mt-2 text-gray-700">{{ segment.text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+</div>
+
+<script>
+let segments = [];
+let video = null;
+let currentSegmentId = -1;
+let lastTime = -1;
+
+function segmentClicked(index) {
+    let segment = segments[index];
+    video.player.currentTime(segment.start + 0.1);
+    checkSegment();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    video = document.getElementById('videoId');
+    {% for segment in video.transcription.segments %}
+    segments.push({
+    start: {{ segment.start }},
+    end: {{ segment.end }},
+    element: document.getElementById('segment-{{ forloop.counter0 }}')
+    });
+    {% endfor %}
+
+    setInterval(() => {
+    checkSegment();
+    }, 1000);
+    checkSegment();
+});
+
+function checkSegment() {
+    let currentTime = video.player.currentTime();
+    if (currentTime == lastTime) return;
+    lastTime = currentTime;
+    if (currentSegmentId < 0 || !(currentTime >= segments[currentSegmentId].start && currentTime <= segments[currentSegmentId].end)) {
+    segments.forEach(function(segment, index) {
+        let segmentElement = segment.element;
+        segmentElement.classList.remove('bg-yellow-100');
+        if (currentTime >= segment.start && currentTime <= segment.end) {
+        currentSegmentId = index;
+        segmentElement.classList.add('bg-yellow-100');
+        segmentElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+        }
+    });
+    }
+}
+</script>

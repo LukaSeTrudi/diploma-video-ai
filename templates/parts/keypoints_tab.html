@@ -1,0 +1,13 @@
+{% load custom_filters %}
+<div class="h-full flex flex-col">
+    <div class="flex-1 overflow-y-auto p-4">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Ključne točke</h2>
+        <div>
+            {% for point in video.extracted_data.key_points.key_points %}
+                <div class="mt-2">
+                    <h5><span class="time float-start" onclick="goToTime({{ point.timestamp }})">{{ point.timestamp|time_format }}</span> <b>{{ forloop.counter }}.</b>  {{ point.point }}</h5>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

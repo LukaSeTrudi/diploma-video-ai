@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<p class="text-xl font-bold text-gray-800">{{ video.title }}</p>
+{% endblock %}
+
+{% block content %}
+  <div class="w-full h-full mx-auto flex-1">
+    <div class="h-full">
+      <div class="flex flex-col md:flex-row h-full w-full">
+        <div class="md:w-8/12 p-4 flex-grow">
+          <div class="bg-gray-200 rounded-lg h-full flex justify-center items-center rounded-lg overflow-hidden">
+            <video style="position: relative; height: 100%; width: auto;" id="videoId" controls class="video-js vjs-big-play-centered">
+              <source src="{{ video.video_file.url }}" type="video/mp4" />Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+        <div class="md:w-4/12 p-4 ps-0 flex-grow">
+          <div class="bg-white rounded-lg overflow-hidden h-full flex flex-col">
+              <div class="flex border-b flex-wrap">
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border-b-2 border-blue-500 focus:outline-none" onclick="openTab(event, 'ai')">AI</button>
+                
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border-b-2 border-transparent focus:outline-none" onclick="openTab(event, 'abstract')">Povzetek</button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border-b-2 border-transparent focus:outline-none" onclick="openTab(event, 'keypoints')">Ključne točke</button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border-b-2 border-transparent focus:outline-none" onclick="openTab(event, 'qa')">Vprašanja</button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border-b-2 border-transparent focus:outline-none" onclick="openTab(event, 'transcription')">Prepis</button>
+              </div>
+              
+              <div id="aiTab" class="tab-content h-full overflow-hidden">
+                {% include 'parts/ai_content.html' %}
+              </div>
+              <div id="abstractTab" class="tab-content hidden h-full overflow-hidden">
+                {% include 'parts/abstract_tab.html' %}
+              </div>
+              <div id="keypointsTab" class="tab-content hidden h-full overflow-hidden">
+                {% include 'parts/keypoints_tab.html' %}
+              </div>
+              <div id="transcriptionTab" class="tab-content hidden h-full overflow-hidden">
+                {% include 'parts/transcription_content.html' %}
+              </div>
+              <div id="qaTab" class="tab-content h-full hidden overflow-hidden">
+                {% include 'parts/questions.html' %}
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openTab(evt, tabName) {
+      var i, tabContent, tabBtns
+      tabContent = document.getElementsByClassName('tab-content')
+      for (i = 0; i < tabContent.length; i++) {
+        tabContent[i].classList.add('hidden')
+      }
+      tabBtns = document.getElementsByClassName('tab-btn')
+      for (i = 0; i < tabBtns.length; i++) {
+        tabBtns[i].classList.remove('border-blue-500')
+        tabBtns[i].classList.add('border-transparent')
+      }
+      document.getElementById(tabName + 'Tab').classList.remove('hidden')
+      evt.currentTarget.classList.remove('border-transparent')
+      evt.currentTarget.classList.add('border-blue-500')
+    }
+  </script>
+
+  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+  <script>
+    var player = videojs('videoId', {
+      controls: true,
+      autoplay: false,
+      preload: 'auto',
+      controlBar: {
+        volumePanel: {
+          inline: false
+        }
+      }
+    })
+  </script>
+
+{% endblock %}

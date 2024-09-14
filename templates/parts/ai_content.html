@@ -1,0 +1,171 @@
+{% load custom_filters %}
+<div class="h-full flex flex-col">
+  <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4" id="chatMessages">
+    {% for message in video.messages %}
+      {% if message.role == 'user' %}
+      <div class="self-end relative bg-blue-500 text-white p-4 rounded-lg shadow">
+        <pre class="text-sm whitespace-normal font-mono">{{ message.content.0.text }}</pre>
+        <p class="text-xs text-right text-blue-200 mt-1">{{ message.role }}</p>
+      </div>
+      {% endif %}
+      {% if message.role == 'assistant' %}
+      <div class="self-start relative bg-gray-200 text-gray-800 p-4 rounded-lg shadow">
+        <pre class="text-sm whitespace-normal font-mono">
+          {% if message.content.0.timestamp != None and message.content.0.timestamp != 0 %}
+          <span class="time" onclick="goToTime({{ message.content.0.timestamp }})">{{ message.content.0.timestamp|time_format }}</span>
+          {% endif %}
+          {{ message.content.0.text }}
+        </pre>
+        <p class="text-xs text-right text-gray-600 mt-1">{{ message.role }}</p>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <form id="chatForm" class="flex flex-wrap justify-end gap-y-2 gap-x-2 p-4 mb-0 border-t border-gray-200">
+    <input type="text" id="chatInput" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Napiši vprašanje...">
+    <button type="submit" class="px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      Pošlji
+    </button>
+  </form>
+</div>
+
+<style>
+  .time {
+    background: green;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    margin-right: 5px;
+    font-size: 0.75rem;
+    color: white;
+  }
+
+  .source {
+    display: none;
+    position: absolute;
+    bottom: 5px;
+    left: 1rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+    background: #f3f4f6;
+  }
+</style>
+
+<script>
+  function goToTime(time) {
+    time = time + "";
+    if (time.includes(':')) {
+      // Input format mm:ss
+      time = time.split(':').reduce((acc, time, index) => acc + parseInt(time) * (index === 0 ? 60 : 1), 0);
+    } else {
+      time = parseFloat(time);
+    }
+    console.log(time);
+    const player = document.getElementById('videoId').player;
+    player.currentTime(time);
+  }
+
+  function formatContentMessage(message) {
+    let newMessage = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    newMessage = newMessage.replace(/&lt;time:(.*?)&gt;/g, '<span class="time" onclick="goToTime(\'$1\')">$1</span>');
+    newMessage = newMessage.replace(/<time:(.*?)>/g, '<span class="time" onclick="goToTime(\'$1\')">$1</span>');
+
+    newMessage = newMessage.replace(/<source>(.*?)<\/source>/g, '<div class="source">$1</div>');
+    newMessage = newMessage.replace(/&lt;source&gt;(.*?)&lt;\/source&gt;/g, '<div class="source">$1</div>');
+
+
+    console.log(newMessage);
+    return newMessage;
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const chatMessages = document.getElementById('chatMessages');
+
+
+    scrollToBottom();
+    chatForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (message) {
+        chatInput.value = '';
+        sendMessage(message);
+      }
+    });
+
+    function sendMessage(text) {
+      const csrftoken = getCookie('csrftoken');
+      addMessage(text, 'user', true);
+      const videoTimestamp = document.getElementById('videoId').player.currentTime();
+      console.log(videoTimestamp, "YOO");
+      fetch(`{{ video.id }}/add_message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ message: text, timestamp: videoTimestamp }),
+      }).then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          addMessage(data.message.content[0].text, 'assistant', false, data.message.content[0].timestamp, data.message.content[0].jumpVideo);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+    function convertSecondsToMMSS(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        const formattedMinutes = String(minutes).padStart(2, '0');
+        const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+        return `${formattedMinutes}:${formattedSeconds}`;
+    }
+    function addMessage(text, sender, isUser, timestamp = null, jump = null) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('p-4', 'rounded-lg', 'shadow', 'flex', 'flex-col', 'relative');
+      if (isUser) {
+        messageDiv.classList.add('self-end', 'bg-blue-500', 'text-white');
+      } else {
+        messageDiv.classList.add('self-start', 'bg-gray-200', 'text-gray-800');
+      }
+
+      let insideMsg = text;
+
+      if(timestamp) {
+        time = `<span class="time" onclick="goToTime(${timestamp})">${convertSecondsToMMSS(timestamp)}</span>`
+        insideMsg = time + insideMsg;
+      }
+
+      messageDiv.innerHTML = `
+        <pre class="text-sm whitespace-normal font-mono">${insideMsg}</pre>
+        <p class="text-xs text-right mt-1">${sender}</p>
+      `;
+      chatMessages.appendChild(messageDiv);
+      scrollToBottom()
+      if(jump) {
+        goToTime(jump);
+      }
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    function scrollToBottom() {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  });
+</script>

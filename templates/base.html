@@ -1,0 +1,40 @@
+{% csrf_token %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Welcome to My Site{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+    href="https://unpkg.com/video.js@7/dist/video-js.min.css"
+    rel="stylesheet"
+  />
+    <style>
+        * {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+        }
+        .video-js * {
+            font-family: VideoJS !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+    <header class="bg-white shadow-md">
+        <div class="mx-auto px-4 py-2 flex gap-4 items-center">
+            <a href="/videos">
+                <h1 class="text-3xl font-bold text-blue-500">Diploma AI</h1>
+            </a>
+            {% block header %}{% endblock %}
+        </div>
+    </header>
+
+    <div style="height: calc(100vh - 92px)">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="bg-gray-900 text-white text-center py-2">
+        <p>&copy; Luka Pavčnik diplomska naloga</p>
+    </footer>
+</body>
+</html>
